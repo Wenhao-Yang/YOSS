@@ -1,0 +1,8 @@
+[submodule "thirds/SpeechCLIP"]
+	path = thirds/SpeechCLIP
+	url = git@github.com:Wenhao-Yang/SpeechCLIP.git
+	branch = github
+[submodule "thirds/YOLO-World"]
+	path = thirds/YOLO-World
+	url = git@github.com:Wenhao-Yang/YOLO-World.git
+	branch = github

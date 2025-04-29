@@ -1,5 +1,4 @@
-# YOSS
-
+# You Only Speaker Once to See (YOSS)
 
 
 ## Getting started
@@ -15,14 +14,14 @@ Already a pro? Just edit this README.md and make it your own. Want to make it ea
 
 ```
 cd existing_repo
-git remote add origin https://jihulab.com/Wenhao-Yang/yoss.git
+git remote add origin https://github.com/Wenhao-Yang/yoss.git
 git branch -M main
 git push -uf origin main
 ```
 
 ## Integrate with your tools
 
-- [ ] [Set up project integrations](https://jihulab.com/Wenhao-Yang/yoss/-/settings/integrations)
+- [ ] [Set up project integrations](https://github.com/Wenhao-Yang/yoss/-/settings/integrations)
 
 ## Collaborate with your team
 
