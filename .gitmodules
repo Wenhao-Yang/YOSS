@@ -6,3 +6,9 @@
 	path = thirds/YOLO-World
 	url = https://github.com/Wenhao-Yang/YOLO-World.git
 	branch = github
+[submodule "thirds/Megatron-LM"]
+	path = thirds/Megatron-LM
+	url = https://kkgithub.com/ngoyal2707/Megatron-LM.git
+[submodule "thirds/fairseq"]
+	path = thirds/fairseq
+	url = https://kkgithub.com/facebookresearch/fairseq.git
