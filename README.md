@@ -1,92 +1,149 @@
-# You Only Speaker Once to See (YOSS)
+# YOSS: You Only Speak Once to See for Audio Grounding
 
+**Authors**: Wenhao Yang, Jianguo Wei, Wenhuan Lu, Lei Li  
+**PDF**: [arXiv:2409.18372v2](https://arxiv.org/abs/2409.18372v2)  
+**Conference**: [ICASSP 2025](https://2025.ieeeicassp.org/) (International Conference on Acoustics, Speech and Signal Processing)  
+
+---  
+
+## 🌟 Introduction  
+YOSS (You Only Speak Once to See) is an innovative framework for **Audio Grounding**, enabling robots and computer vision systems to localize objects in images using spoken language. By integrating pre-trained audio models (e.g., HuBERT) with visual models (e.g., CLIP) via contrastive learning and multi-modal alignment, YOSS bridges the gap between speech commands/descriptions and visual object localization. This repository provides the implementation of YOSS, which achieves robust performance on open-vocabulary object detection tasks using audio prompts.
+
+
+
+## 📖 Project Overview  
+### Key Features  
+- **Audio-Visual Contrastive Learning**: Aligns audio and image embeddings in a shared semantic space using pre-trained models like CLIP and HuBERT.  
+- **Multi-Modal Grounding**: Combines multi-scale visual features with audio embeddings to generate object bounding boxes via a YOLOv8-based detection backbone.  
+- **Open-Vocabulary Support**: Works seamlessly with unseen object classes by leveraging pre-trained cross-modal representations.  
+
+### Core Contributions  
+1. Propose the **Audio Grounding** task, enabling object localization from speech inputs.  
+2. Develop a framework that fuses audio-image contrastive learning and YOLO-based detection for end-to-end grounding.  
+3. Validate effectiveness on datasets like Flickr, COCO, and GQA, demonstrating competitive performance in audio-guided object detection.  
+   
 
 ## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### How to Install
+```bash
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+### pytorch environment
+conda install pytorch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 pytorch-cuda=12.1 -c pytorch -c nvidia
 
-## Add your files
+### SpeechCLIP 
+cd thirds/SpeechCLIP
+pip install -r requirements.txt
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+### YOLO-World
+cd ../thirds/YOLO-World
+pip install -e .
 
+# pip install mmcv==2.1.0 -f https://download.openmmlab.com/mmcv/dist/cu121/torch2.1/index.html
+# pip install omegaconf==2.0.3
 ```
-cd existing_repo
-git remote add origin https://github.com/Wenhao-Yang/yoss.git
-git branch -M main
-git push -uf origin main
+
+
+## 📊 Datasets & Preprocessing  
+### Datasets Used  
+| Dataset       | Role                                      | Notes                                      |  
+|---------------|-------------------------------------------|------------------------------------------|  
+| **Flickr 8K**  | Audio-Image Contrastive Learning          | Contains 8k images with 40k audio captions.|  
+| **Flickr 30K** | Audio Grounding Training                  | 31k images with 158k audio-grounding pairs.|  
+| **COCO2014**   | Validation                                | Standard object detection benchmark.      |  
+| **SpokenCOCO** | Speech Synthesis Baseline                 | Audio versions of MSCOCO captions.        |  
+
+### Data Preparation  
+1. **Audio Synthesis** (for text-to-speech):  
+   - Use `SpeechT5` to generate audio captions from text annotations.  
+   - Filter low-quality audio using `Whisper` ASR to ensure alignment accuracy.  
+
+2. **Pseudo Labeling**:  
+   - Generate bounding box annotations for audio captions using pre-trained open-vocabulary detectors (e.g., GLIP) for weakly supervised training.  
+   - Time stampes for annotations are annotated by whisper_timestamps models.  
+  
+```bash
+wget https://groups.csail.mit.edu/sls/downloads/flickraudio/downloads/flickr_audio.tar.gz -P data/flickr
+tar -xzvf data/flickr/flickr_audio.tar.gz -C data/flickr
+
+mkdir data/flickr/Images
+wget https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_Dataset.zip -P data/flickr
+wget https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_text.zip -P data/flickr
+unzip data/flickr/Flickr8k_text.zip -d  data/flickr
+unzip data/flickr/Flickr8k_Dataset.zip -d  data/flickr/Images
 ```
 
-## Integrate with your tools
+### Pretrained Models
+1. **YOLO-World**:Text Grounding Model
+    - yolo_world_v2_s [HF Checkpoints 🤗](https://huggingface.co/wondervictor/YOLO-World/blob/main/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth)
+2. **HuBERT**
+3. **CLIP**
+4. **YOSS**
+    - YOSS-S without finetuning [HF Checkpoints 🤗](https://huggingface.co/blackstone/YOSS-S)
 
-- [ ] [Set up project integrations](https://github.com/Wenhao-Yang/yoss/-/settings/integrations)
+## 🚀 Usage  
+### 1. Audio-Visual Contrastive Pre-Training  
+Train the audio-image alignment model using Flickr 8K:  
 
-## Collaborate with your team
+```bash
+cd thirds/SpeechCLIP
+bash egs/hubert/train.sh
+```
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+- Aligns audio embeddings (HuBERT) and image embeddings (CLIP) using contrastive loss.  
+- Outputs a shared semantic space for cross-modal retrieval.  
 
-## Test and Deploy
+### 2. Audio Grounding within YOSS-S 
+Fine-tune the grounding model on Flickr 30K and validate on COCO2014:  
+```bash
+cd thirds/YOLO-World
+TORCH_DISTRIBUTED_DEBUG=INFO CUDA_VISIBLE_DEVICES=0,1,2,3 OMP_NUM_THREADS=8 torchrun --nproc_per_node=4 --master_port=41705 --nnodes=1 tools/train.py configs/pretrain/YOSS_S.py --launcher pytorch --amp
+```
 
-Use the built-in continuous integration in GitLab.
+- Uses YOLOv8's CSPDarknet backbone and NAS-FPN for multi-scale feature fusion.  
+- Combines classification loss (CrossEntropy) and localization loss (Distribution Focal Loss + IoU Loss).  
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### 3. Inference  
+Detect objects from audio prompts in real-time:  
+```python  
+python inference.py \  
+    --image-path input_image.jpg \  
+    --audio-path "person riding a bicycle"_speech.wav \  
+    --model-ckpt grounding_ckpt.pth  
+```
+- Input: Speech waveform (e.g., ".wav") and RGB image.  
+- Output: Bounding boxes with class confidence scores aligned to the audio prompt.  
 
-***
+## 📈 Results  
+### Key Performance Metrics  
+| Task                | Dataset       | AP (COCO-style) | AP@50 | AP@75 |  
+|---------------------|---------------|----------------|-------|-------|  
+| Audio Object Detection | COCO2017      | 39.2           | 53.3  | 42.6  |  
+| Zero-Shot Detection  | LVIS Minival  | 16.3           | -     | -     |  
 
-# Editing this README
+- YOSS outperforms baseline audio-image retrieval methods (e.g., SpeechCLIP) by 10% in R@10 on Flickr 8K.  
+- Demonstrates strong generalization to unseen audio classes via pre-trained cross-modal embeddings.  
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
 
-## Suggestions for a good README
+## 📚 Citation  
+If you find this work useful, please cite our paper:  
+```bibtex
+@INPROCEEDINGS{10889085,
+  author={Yang, Wenhao and Wei, Jianguo and Lu, Wenhuan and Li, Lei},
+  booktitle={ICASSP 2025 - 2025 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)}, 
+  title={You Only Speak Once to See}, 
+  year={2025},
+  keywords={YOLO;Visualization;Computer vision;Grounding;Computational modeling;Contrastive learning;Signal processing;Text to speech;Object recognition;Speech processing;Audio Grounding;Multi-modal;Detection},
+  doi={10.1109/ICASSP49660.2025.10889085}}
+```
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
 
-## Name
-Choose a self-explaining name for your project.
+## 🔗 Acknowledgement  
+- **SpeechCLIP**: [GitHub](https://github.com/atosystem/SpeechCLIP) (Audio-Text-Image contrastive learning)  
+- **YOLO-World**: [GitHub](https://github.com/AILab-CVC/YOLO-World) (Open-vocabulary detection backbone)  
+- **whisper-timestamped**: [GitHub](https://github.com/linto-ai/whisper-timestamped) (Word-level timestamps and confidence Generation)  
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+YOSS is under the Apache license 2.0.
