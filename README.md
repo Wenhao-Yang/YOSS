@@ -73,6 +73,9 @@ unzip data/flickr/Flickr8k_text.zip -d  data/flickr
 unzip data/flickr/Flickr8k_Dataset.zip -d  data/flickr/Images
 ```
 
+3. **Others**:  
+   - Other annotations and classes audio files could be downloaded from the [HF model 🤗](https://huggingface.co/blackstone/YOSS-S).  
+   
 ### Pretrained Models
 1. **YOLO-World**:Text Grounding Model
     - yolo_world_v2_s [HF Checkpoints 🤗](https://huggingface.co/wondervictor/YOLO-World/blob/main/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth)
@@ -97,7 +100,7 @@ bash egs/hubert/train.sh
 Fine-tune the grounding model on Flickr 30K and validate on COCO2014:  
 ```bash
 cd thirds/YOLO-World
-TORCH_DISTRIBUTED_DEBUG=INFO CUDA_VISIBLE_DEVICES=0,1,2,3 OMP_NUM_THREADS=8 torchrun --nproc_per_node=4 --master_port=41705 --nnodes=1 tools/train.py configs/pretrain/YOSS_S.py --launcher pytorch --amp
+TORCH_DISTRIBUTED_DEBUG=INFO CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 OMP_NUM_THREADS=8 torchrun --nproc_per_node=8 --master_port=41705 --nnodes=1 tools/train.py configs/pretrain/YOSS_S.py --launcher pytorch --amp
 ```
 
 - Uses YOLOv8's CSPDarknet backbone and NAS-FPN for multi-scale feature fusion.  
@@ -105,11 +108,9 @@ TORCH_DISTRIBUTED_DEBUG=INFO CUDA_VISIBLE_DEVICES=0,1,2,3 OMP_NUM_THREADS=8 torc
 
 ### 3. Inference  
 Detect objects from audio prompts in real-time:  
-```python  
-python inference.py \  
-    --image-path input_image.jpg \  
-    --audio-path "person riding a bicycle"_speech.wav \  
-    --model-ckpt grounding_ckpt.pth  
+```bash  
+CUDA_VISIBLE_DEVICES=0,1,2,3 OMP_NUM_THREADS=4 torchrun --nproc_per_node=4 --master_port=41735 --nnodes=1 tools/test.py configs/pretrain/YOSS_S.py pretrained/finetune/audio_ckp_mix.pth --launcher pytorch --work-dir work_dirs/YOSS-test-coco --out YOSS-test-coco/coco_all_epoch0.pkl
+
 ```
 - Input: Speech waveform (e.g., ".wav") and RGB image.  
 - Output: Bounding boxes with class confidence scores aligned to the audio prompt.  
@@ -142,7 +143,8 @@ If you find this work useful, please cite our paper:
 - **SpeechCLIP**: [GitHub](https://github.com/atosystem/SpeechCLIP) (Audio-Text-Image contrastive learning)  
 - **YOLO-World**: [GitHub](https://github.com/AILab-CVC/YOLO-World) (Open-vocabulary detection backbone)  
 - **whisper-timestamped**: [GitHub](https://github.com/linto-ai/whisper-timestamped) (Word-level timestamps and confidence Generation)  
-
+- **speechbrain**: [GitHub](https://github.com/speechbrain/speechbrain) (Speech Data Augmentation)  
+- ...
 
 ## License
 
